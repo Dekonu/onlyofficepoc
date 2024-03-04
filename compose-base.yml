@@ -3,14 +3,21 @@ version: "3.8"
 services:
   document-server:
     container_name: document-server
-    image: onlyoffice/documentserver:7.5
+    image: onlyoffice/documentserver-de:latest
     expose:
       - "80"
     environment:
-      - JWT_SECRET=your-256-bit-secret
+      - JWT_SECRET=jwt_secret
+      - ALLOW_META_IP_ADDRESS=true
+    volumes:
+      - ./app/onlyoffice/documentserver/data:/var/www/onlyoffice/Data
+      - ./app/onlyoffice/documentserver/logs:/var/log/onlyoffice
+      - ./app/onlyoffice/documentserver/lib:/var/lib/onlyoffice
+      - ./app/onlyoffice/documentserver/db:/var/lib/postgresql
+
 
   example:
-    container_name: example
+    container_name: python-example
     build:
       context: .
     expose:
@@ -20,7 +27,7 @@ services:
       - DOCUMENT_SERVER_PRIVATE_URL=http://proxy:8080
       - DOCUMENT_SERVER_PUBLIC_URL=http://localhost:8080
       - EXAMPLE_URL=http://proxy
-      - JWT_SECRET=your-256-bit-secret
+      - JWT_SECRET=jwt_secret
       - PORT=80
 
   proxy:
@@ -31,3 +38,7 @@ services:
     ports:
       - "80:80"
       - "8080:8080"
+
+secrets:
+  jwt_secret:
+    file: ./jwt.secret

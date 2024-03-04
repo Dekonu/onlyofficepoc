@@ -4,3 +4,5 @@ services:
   example:
     build:
       target: example-dev
+    volumes:
+      - ./:/srv/

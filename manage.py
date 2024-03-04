@@ -64,7 +64,7 @@ def routers():
         path('create', actions.createNew),
         path('csv', actions.csv),
         path('download', actions.download),
-        path('downloadhistoryfile', actions.downloadhistoryfile),
+        path('downloadhistory', actions.downloadhistoryfile),
         path('downloadfullhistory', actions.downloadfullhistory),
         path('edit', actions.edit),
         path('files', actions.files),

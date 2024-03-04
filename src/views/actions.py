@@ -124,11 +124,11 @@ def createWithContent(request):
         commands = body["commands"]
         
         response = builderManager.builderRequest(commands, request)
-        print(response)
     except Exception as e:
         response.setdefault('error', e.args[0])
     
-    return HttpResponse(json.dumps(response), content_type='application/json')
+    return HttpResponse(json.dumps(response.json()), content_type='application/json')
+
 
 
 # save file as...

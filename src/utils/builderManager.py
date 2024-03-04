@@ -45,7 +45,7 @@ def genDocbuilder(filename, fileExt, commands):
     builder.CreateFile("{fileExt}");
     var oDocument = Api.GetDocument();
     {coreCommands}
-    builder.SaveFile({fileExt},{filename}.{fileExt});
+    builder.SaveFile("{fileExt}","{filename}.{fileExt}");
     builder.CloseFile();
     """
 
@@ -64,12 +64,12 @@ def builderRequest(commands, req):
     filename = docManager.getCorrectName(filename, req)
     builderCode = genDocbuilder(filename, fileExt, commands)
     builder_file_path = docManager.getBuilderPath(filename, req)
-
+    print(builder_file_path)
     with open(builder_file_path, "w+") as fh:
         fh.write(builderCode)
 
-    payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}"
-    payload["async"] = False
+    payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}.{fileExt}"
+    payload["async"] = True
 
     print(payload["url"])
 
@@ -80,8 +80,21 @@ def builderRequest(commands, req):
         #payload['token'] = jwtManager.encode(payload) # encode a payload object into a body token
 
     response = requests.post(config_manager.document_builder_api_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
-    out = {
-        "response" : response.json(),
-        "payload" : payload
-        }
-    return out
+
+    response_body = response.json()
+
+    print(response.json())
+
+    if 'key' in response_body:
+        payload = {}
+        payload["async"] = True
+        payload["key"] = response_body["key"]
+
+    if (jwtManager.isEnabled() and jwtManager.useForRequest()): # check if a secret key to generate token exists or not
+        headerToken = jwtManager.encode({'payload': payload}) # encode a payload object into a header token
+        headers[config_manager.jwt_header()] = f'Bearer {headerToken}' # add a header Authorization with a header token with Authorization prefix in it
+    response = requests.post(config_manager.document_builder_api_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
+    
+    print(response.json())
+
+    return response

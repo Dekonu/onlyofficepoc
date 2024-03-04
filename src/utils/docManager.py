@@ -97,7 +97,7 @@ def getServerUrl (forDocumentServer, req):
     else:
         # TODO this was changed sot that it points to the right location, probably need a better way of doing this
         # than looking at the example_url
-        return req.headers.get("x-forwarded-proto") or "http://host.docker.internal:8000"
+        return req.headers.get("x-forwarded-proto") or req.scheme + "://" + req.get_host()
 
 # get file url
 def getFileUri(filename, forDocumentServer, req):

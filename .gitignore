@@ -3,5 +3,8 @@ build
 storage
 *.gz
 *.lic
-set-env.sh
 *.pyc
+bin/
+lib/
+pyvenv.cfg
+

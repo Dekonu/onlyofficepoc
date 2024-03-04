@@ -1,4 +1,0 @@
-#!/bin/bash
-export DOCUMENT_SERVER_PRIVATE_URL=
-export DOCUMENT_SERVER_PUBLIC_URL=
-export EXAMPLE_URL=

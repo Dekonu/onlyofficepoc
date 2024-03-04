@@ -1,0 +1,17 @@
+asgiref==3.7.2
+certifi==2024.2.2
+charset-normalizer==3.3.2
+Django==5.0.3
+django-stubs==4.2.7
+django-stubs-ext==4.2.7
+idna==3.6
+msgspec==0.18.6
+online-editor-example @ file:///Users/jigar.gor/Documents/24R1/oopoc/onlyofficepoc
+PyJWT==2.8.0
+python-magic-bin==0.4.14
+requests==2.31.0
+sqlparse==0.4.4
+types-pytz==2024.1.0.20240203
+types-PyYAML==6.0.12.12
+typing_extensions==4.10.0
+urllib3==2.2.1

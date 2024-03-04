@@ -28,7 +28,7 @@ import requests
 from src.common import http
 from src.configuration import ConfigurationManager
 from src.response import ErrorResponse
-from src.utils import docManager, fileUtils, serviceConverter, users, jwtManager, historyManager, trackManager
+from src.utils import docManager, fileUtils, serviceConverter, users, jwtManager, historyManager, trackManager, builderManager
 import shutil
 
 config_manager = ConfigurationManager()
@@ -110,6 +110,26 @@ def createNew(request):
         response.setdefault('error', e.args[0])
 
     return HttpResponse(json.dumps(response), content_type='application/json')
+
+def getDocBuilderFile(request):
+    filename = request.GET['fileName']
+    filepath = docManager.getBuilderPath(filename, request)
+    return docManager.download(filepath)
+
+def createWithContent(request):
+    response = {}
+    try:
+
+        body = json.loads(request.body)
+        commands = body["commands"]
+        
+        response = builderManager.builderRequest(commands, request)
+        print(response)
+    except Exception as e:
+        response.setdefault('error', e.args[0])
+    
+    return HttpResponse(json.dumps(response), content_type='application/json')
+
 
 # save file as...
 def saveAs(request):
@@ -580,3 +600,4 @@ def restore(request: HttpRequest) -> HttpResponse:
             message=f'{type(error)}: {error}',
             status=HTTPStatus.INTERNAL_SERVER_ERROR
         )
+

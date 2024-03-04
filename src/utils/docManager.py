@@ -123,14 +123,18 @@ def getDownloadUrl(filename, req, isServerUrl = True):
     return f'{host}/download?fileName={filename}{curAdr}'
 
 # get root folder for the current file
-def getRootFolder(req):
+def getRootFolder(req, builder = False):
     if isinstance(req, str):
         curAdr = req
     else:
         curAdr = req.META['REMOTE_ADDR']
 
-    storage_directory = config_manager.storage_path()
-    directory = storage_directory.joinpath(curAdr)
+    if builder:
+        child_dir = config_manager.builder_path()
+    else:
+        child_dir = config_manager.storage_path()
+
+    directory = child_dir.joinpath(curAdr)
 
     if not os.path.exists(directory): # if such a directory does not exist, make it
         os.makedirs(directory)
@@ -171,6 +175,11 @@ def getHistoryDirPath(filename, req):
 # get the file path
 def getStoragePath(filename, req):
     directory = getRootFolder(req)
+
+    return os.path.join(directory, fileUtils.getFileName(filename))
+
+def getBuilderPath(filename, req):
+    directory = getRootFolder(req, builder = True)
 
     return os.path.join(directory, fileUtils.getFileName(filename))
 

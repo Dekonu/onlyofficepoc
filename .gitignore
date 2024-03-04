@@ -3,3 +3,5 @@ build
 storage
 *.gz
 *.lic
+set-env.sh
+*.pyc

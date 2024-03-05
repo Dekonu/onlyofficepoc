@@ -70,7 +70,8 @@ def convert(request):
         lang = request.COOKIES.get('ulang') if request.COOKIES.get('ulang') else 'en'
         fileUri = docManager.getDownloadUrl(filename,request)
         fileExt = fileUtils.getFileExt(filename)
-        newExt = 'ooxml'  # convert to .ooxml
+        newExt = body.get("newExt") or 'ooxml' # default to ooxml
+        
 
         if docManager.isCanConvert(fileExt):  # check if the file extension is available for converting
             key = docManager.generateFileKey(filename, request)  # generate the file key
@@ -91,6 +92,9 @@ def convert(request):
 
     except Exception as e:
         response.setdefault('error', e.args[0])
+
+    # TODO REMOVE THIS
+    response["fileUri"] = fileUri
 
     return HttpResponse(json.dumps(response), content_type='application/json')
 
@@ -126,8 +130,14 @@ def createWithContent(request):
         response = builderManager.builderRequest(commands, request)
     except Exception as e:
         response.setdefault('error', e.args[0])
-    
-    return HttpResponse(json.dumps(response.json()), content_type='application/json')
+        response["status"] = "error"
+
+    if response["status"] == "success" and "filename" in response:
+        return HttpResponseRedirect(f"edit?fileName={filename}")
+    else:
+        # If we aren't handling proper status codes, assume that it's an internal server problem
+        status = 500 if "status" not in response else response["status"]
+        HttpResponse(json.dumps(response), content_type='application/json', status_code = status)
 
 
 

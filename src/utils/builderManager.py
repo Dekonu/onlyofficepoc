@@ -59,6 +59,9 @@ def builderRequest(commands, req):
     filename = req.GET.get("fileName") or "new"
     fileExt = req.GET["fileExt"]
 
+    returnEditor = req.GET.get("edit", True)
+    storeHistory = req.GET.get("edithistory", True)
+
     # write some function to handle different commands but hardcode table for now
     payload = {}
     filename = docManager.getCorrectName(filename, req)
@@ -72,8 +75,6 @@ def builderRequest(commands, req):
     payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}.docbuilder"
     payload["async"] = False
 
-    print(payload["url"])
-
     if (jwtManager.isEnabled() and jwtManager.useForRequest()): # check if a secret key to generate token exists or not
         headerToken = jwtManager.encode({'payload': payload}) # encode a payload object into a header token
         headers[config_manager.jwt_header()] = f'Bearer {headerToken}' # add a header Authorization with a header token with Authorization prefix in it
@@ -82,14 +83,42 @@ def builderRequest(commands, req):
 
     response = requests.post(config_manager.document_builder_api_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
     response_body = response.json()
-    
-    if "urls" in response_body:
-        for doc in response_body["urls"].keys():
-            filename = docManager.getCorrectName(doc, req)
-            filepath = docManager.getStoragePath(filename, req)
-            # With save should probably be true
-            docManager.downloadFileFromUri(response_body["urls"][doc], filepath, True)
 
-    # TODO need to figure out what to return here. Maybe an editor?
+    try:
+        if "urls" in response_body:
+            doc_count = 0
+            for doc in response_body["urls"].keys():
+                doc_count+=1
+                filename = docManager.getCorrectName(doc, req)
+                filepath = docManager.getStoragePath(filename, req)
+                # With save should probably be true
+                docManager.downloadFileFromUri(response_body["urls"][doc], filepath, True)
+                if storeHistory:
+                    historyManager.createMeta(filepath, req)
+            res = {}
 
-    return response
+            # in the case where the doc count is 0, it is likely that our code messed up
+            if doc_count == 0:
+                res = {
+                    "status" : "error",
+                    "message" : "no document was created, please check command notation",
+                }
+            elif doc_count != 1 or not returnEditor:
+                res = {
+                    "status" : "success",
+                    "message" : "files successfully downloaded - no editor returned since more than one file was generated",
+                    "files" : [response_body["urls"].keys()],
+                    }
+            else:
+                # only looped once, last ref to filename is the filename we want
+                res = {
+                    "status" : "success",
+                    "filename" : filename,
+                }
+    except Exception as e:
+        res = {
+            "status" : "error",
+            "error" : str(e),
+            }
+
+    return res

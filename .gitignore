@@ -7,8 +7,8 @@ storage
 bin/
 lib/
 pyvenv.cfg
-*.secret
-share/
+secrets/
 db/
 logs/
 builder/
+.env

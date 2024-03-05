@@ -70,7 +70,7 @@ def builderRequest(commands, req):
         fh.write(builderCode)
 
     payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}.docbuilder"
-    payload["async"] = True
+    payload["async"] = False
 
     print(payload["url"])
 
@@ -81,21 +81,15 @@ def builderRequest(commands, req):
         #payload['token'] = jwtManager.encode(payload) # encode a payload object into a body token
 
     response = requests.post(config_manager.document_builder_api_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
-
     response_body = response.json()
-
-    print(response.json())
-
-    if 'key' in response_body:
-        payload = {}
-        payload["async"] = True
-        payload["key"] = response_body["key"]
-
-    if (jwtManager.isEnabled() and jwtManager.useForRequest()): # check if a secret key to generate token exists or not
-        headerToken = jwtManager.encode({'payload': payload}) # encode a payload object into a header token
-        headers[config_manager.jwt_header()] = f'Bearer {headerToken}' # add a header Authorization with a header token with Authorization prefix in it
-    response = requests.post(config_manager.document_builder_api_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
     
-    print(response.json())
+    if "urls" in response_body:
+        for doc in response_body["urls"].keys():
+            filename = docManager.getCorrectName(doc, req)
+            filepath = docManager.getStoragePath(filename, req)
+            # With save should probably be true
+            docManager.downloadFileFromUri(response_body["urls"][doc], filepath, True)
+
+    # TODO need to figure out what to return here. Maybe an editor?
 
     return response

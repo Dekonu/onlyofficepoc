@@ -62,13 +62,14 @@ def builderRequest(commands, req):
     # write some function to handle different commands but hardcode table for now
     payload = {}
     filename = docManager.getCorrectName(filename, req)
+    print(filename)
     builderCode = genDocbuilder(filename, fileExt, commands)
     builder_file_path = docManager.getBuilderPath(filename, req)
     print(builder_file_path)
-    with open(builder_file_path, "w+") as fh:
+    with open(f"{builder_file_path}.docbuilder", "w+") as fh:
         fh.write(builderCode)
 
-    payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}.{fileExt}"
+    payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}.docbuilder"
     payload["async"] = True
 
     print(payload["url"])

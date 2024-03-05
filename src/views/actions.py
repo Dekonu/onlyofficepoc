@@ -114,7 +114,7 @@ def createNew(request):
 def getDocBuilderFile(request):
     filename = request.GET['fileName']
     filepath = docManager.getBuilderPath(filename, request)
-    return docManager.download(filepath)
+    return docManager.download(f"{filepath}")
 
 def createWithContent(request):
     response = {}

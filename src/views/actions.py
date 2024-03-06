@@ -59,6 +59,21 @@ def upload(request):
 
     return HttpResponse(json.dumps(response), content_type='application/json')  # return http response in json format
 
+def sendcommand(request):
+    """
+    Using this to test the command service operations
+    """
+    body = trackManager.readBody(request)  # read request body
+
+    key = None if "key" not in body else body.pop("key")
+    
+    response = trackManager.commandRequest(body.pop("c"), key, True, **body)
+    if response:
+        return HttpResponse(json.dumps(response.json()), content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({"error":"command didn't go through"}), content_type='application/json')
+
+
 # convert a file from one format to another
 def convert(request):
     response = {}
@@ -73,28 +88,21 @@ def convert(request):
         newExt = body.get("newExt") or 'ooxml' # default to ooxml
         
 
-        if docManager.isCanConvert(fileExt):  # check if the file extension is available for converting
-            key = docManager.generateFileKey(filename, request)  # generate the file key
+        # if docManager.isCanConvert(fileExt):  # check if the file extension is available for converting
+        key = docManager.generateFileKey(filename, request)  # generate the file key
 
-            convertedData = serviceConverter.getConvertedData(fileUri, fileExt, newExt, key, True, filePass, lang)  # get the url of the converted file
+        convertedData = serviceConverter.getConvertedData(fileUri, fileExt, newExt, key, False, filePass, lang)  # get the url of the converted file
 
-            if not convertedData:  # if the converter url is not received, the original file name is passed to the response
-                response.setdefault('step', '0')
-                response.setdefault('filename', filename)
-            else:
-                correctName = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + '.' + convertedData['fileType'], request)  # otherwise, create a new name with the necessary extension
-                path = docManager.getStoragePath(correctName, request)
-                docManager.downloadFileFromUri(convertedData['uri'], path, True)  # save the file from the new url in the storage directory
-                docManager.removeFile(filename, request)  # remove the original file
-                response.setdefault('filename', correctName)  # pass the name of the converted file to the response
-        else:
-            response.setdefault('filename', filename)  # if the file can't be converted, the original file name is passed to the response
+        correctName = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + '.' + convertedData['fileType'], request)  # otherwise, create a new name with the necessary extension
+        path = docManager.getStoragePath(correctName, request)
+        docManager.downloadFileFromUri(convertedData['uri'], path, True)  # save the file from the new url in the storage directory
+        docManager.removeFile(filename, request)  # remove the original file
+        response.setdefault('filename', correctName)  # pass the name of the converted file to the response
+        # else:
+        #     response.setdefault('filename', filename)  # if the file can't be converted, the original file name is passed to the response
 
     except Exception as e:
         response.setdefault('error', e.args[0])
-
-    # TODO REMOVE THIS
-    response["fileUri"] = fileUri
 
     return HttpResponse(json.dumps(response), content_type='application/json')
 

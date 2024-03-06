@@ -6,3 +6,5 @@ services:
       target: example-dev
     volumes:
       - ./:/srv/
+    environment:
+      - ALLOW_PRIVATE_IP_ADDRESS=true

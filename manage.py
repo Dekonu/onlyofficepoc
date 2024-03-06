@@ -76,6 +76,7 @@ def routers():
         path('restore', actions.restore),
         path('saveas', actions.saveAs),
         path('track', actions.track),
+        path('commandservice', actions.sendcommand),
         path('upload', actions.upload)
     ]
     main += static(

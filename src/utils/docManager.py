@@ -119,8 +119,8 @@ def getCreateUrl(fileType, req):
 # get url to download a file
 def getDownloadUrl(filename, req, isServerUrl = True):
     host = getServerUrl(isServerUrl, req)
-    curAdr = f'&userAddress={req.META["REMOTE_ADDR"]}' if isServerUrl else ""
-    return f'{host}/download?fileName={filename}{curAdr}'
+    curAdr = f'userAddress={req.META["REMOTE_ADDR"]}&' if isServerUrl else ""
+    return f'{host}/download?{curAdr}fileName={filename}'
 
 # get root folder for the current file
 def getRootFolder(req, builder = False):

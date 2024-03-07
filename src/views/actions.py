@@ -29,7 +29,7 @@ from src.common import http
 from src.configuration import ConfigurationManager
 from src.response import ErrorResponse
 from src.utils import docManager, fileUtils, serviceConverter, users, jwtManager, historyManager, trackManager, builderManager
-import shutil
+import re
 
 config_manager = ConfigurationManager()
 
@@ -438,6 +438,52 @@ def csv(request):
     response = docManager.download(filePath)
     return response
 
+def testdocbuilder(request):
+    """
+    Used to test docbuilder commands
+    """
+    local_files = docManager.getFilesInfo(request)
+    uri_dict = {}
+    for file in local_files:
+        uri_dict[file["title"]] = docManager.getDownloadUrl(file["title"], request, False).replace(' ','%20')
+    body_unicode = request.body.decode('utf-8')
+    body_unicode = re.sub(r"{([^{]*?)}", lambda p: uri_dict[p.group(1)], body_unicode)
+
+    builderCode = body_unicode
+    req = request
+    filename = "test"
+    builder_file_path = docManager.getBuilderPath(filename, req)
+    with open(f"{builder_file_path}.docbuilder", "w+") as fh:
+        fh.write(builderCode)
+
+    payload = {}
+    headers = {}
+
+    payload["url"] = f"{config_manager.example_url().geturl()}/builder?fileName={filename}.docbuilder"
+    payload["async"] = False
+
+    if (jwtManager.isEnabled() and jwtManager.useForRequest()): # check if a secret key to generate token exists or not
+        headerToken = jwtManager.encode({'payload': payload}) # encode a payload object into a header token
+        headers[config_manager.jwt_header()] = f'Bearer {headerToken}' # add a header Authorization with a header token with Authorization prefix in it
+        #payload doesn't need to contain token since it's in the header
+        #payload['token'] = jwtManager.encode(payload) # encode a payload object into a body token
+
+    response = requests.post(config_manager.document_builder_api_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
+    response_body = response.json()
+    if "urls" in response_body:
+        for doc in response_body["urls"].keys():
+            filename = docManager.getCorrectName(doc, req)
+            filepath = docManager.getStoragePath(filename, req)
+            # With save should probably be true
+            docManager.downloadFileFromUri(response_body["urls"][doc], filepath, True)
+            historyManager.createMeta(filepath, req)
+        response_body.update({"status":"success"})
+        response_body.update({"builderCode":builderCode})
+        response_body.update(payload)
+        return HttpResponse(json.dumps(response_body), content_type='application/json')
+
+    return HttpResponse(json.dumps(response_body))
+
 # download a file
 def download(request):
     try:
@@ -466,6 +512,10 @@ def download(request):
     except Exception:
         response = {}
         response.setdefault('error', 'File not found')
+        import traceback as tb
+        response["traceback"] = tb.format_exc()
+        response["filePath"] = filePath
+        response["userAddress"] = userAddress
         return HttpResponse(json.dumps(response), content_type='application/json')
 
 def downloadfullhistory(request):
@@ -517,8 +567,6 @@ def downloadhistoryfile(request):
         response = docManager.download(filePath)  # download this file
         return response
     except Exception:
-        response = {}
-        response.setdefault('error', 'File not found')
         return HttpResponse(json.dumps(response), content_type='application/json', status=404)
 
 # referenceData

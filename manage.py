@@ -77,7 +77,8 @@ def routers():
         path('saveas', actions.saveAs),
         path('track', actions.track),
         path('commandservice', actions.sendcommand),
-        path('upload', actions.upload)
+        path('upload', actions.upload),
+        path('testdocbuilder', actions.testdocbuilder)
     ]
     main += static(
         settings.STATIC_URL,

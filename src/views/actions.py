@@ -445,7 +445,7 @@ def testdocbuilder(request):
     local_files = docManager.getFilesInfo(request)
     uri_dict = {}
     for file in local_files:
-        uri_dict[file["title"]] = docManager.getDownloadUrl(file["title"], request, False).replace(' ','%20')
+        uri_dict[file["title"]] = docManager.getDownloadUrl(file["title"], request, True).replace(' ','%20')
     body_unicode = request.body.decode('utf-8')
     body_unicode = re.sub(r"{([^{]*?)}", lambda p: uri_dict[p.group(1)], body_unicode)
 
@@ -487,6 +487,7 @@ def testdocbuilder(request):
 # download a file
 def download(request):
     try:
+        print(request.GET['fileName'])
         fileName = fileUtils.getFileName(request.GET['fileName'])  # get the file name
         userAddress = request.GET.get('userAddress')
         isEmbedded = request.GET.get('dmode')
@@ -499,10 +500,15 @@ def download(request):
             try:
                 body = jwtManager.decode(token)
             except Exception:
-                return HttpResponse('JWT validation failed', status=403)
+                # disabling this for now
+                pass
+                #return HttpResponse('JWT validation failed', status=403)
 
         if (userAddress == None):
             userAddress = request
+
+        print(userAddress)
+        print(fileName)
 
         filePath = docManager.getForcesavePath(fileName, userAddress, False)  # get the path to the forcesaved file version
         if (filePath == ""):

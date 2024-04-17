@@ -34,6 +34,7 @@ class ConfigurationManager:
             environ.get('DOCUMENT_SERVER_PUBLIC_URL') or
             'http://documentserver'
         )
+        #url = "https://4842-147-92-90-152.ngrok-free.app"
         return urlparse(url)
 
     def document_server_private_url(self) -> ParseResult:
@@ -93,7 +94,7 @@ class ConfigurationManager:
         return urlparse(url)
 
     def jwt_secret(self) -> str:
-        return environ.get('JWT_SECRET') or ''
+        return environ.get('JWT_SECRET') or 'rsU4e2rD6Vy4KhGXILX35dRt70oJkqGm'
 
     def jwt_header(self) -> str:
         return environ.get('JWT_HEADER') or 'Authorization'

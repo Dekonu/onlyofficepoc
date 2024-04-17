@@ -157,7 +157,7 @@ def processForceSave(body, filename, usAddr):
     return
 
 # create a command request
-def commandRequest(method, key=None, dev = False, **kwargs):
+def commandRequest(method, key=None, dev = True, **kwargs):
     payload = {
         'c': method
     }
@@ -179,7 +179,7 @@ def commandRequest(method, key=None, dev = False, **kwargs):
         payload['token'] = jwtManager.encode(payload) # encode a payload object into a body token
     response = requests.post(config_manager.document_server_command_url().geturl(), json=payload, headers=headers, verify = config_manager.ssl_verify_peer_mode_enabled())
 
-    if 'meta' in payload or dev: 
+    if 'meta' in payload or dev:
         return response
 
     return

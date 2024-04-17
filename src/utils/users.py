@@ -97,6 +97,12 @@ USERS = [
             'remove': []
         }, ['group-2'],
         False, ["copy", "download", "print"], descr_user_3, False),
+    User('uid-4', 'Yu (admin)', 'smith@example.com',
+        '', None, {}, None,
+        None, [], descr_user_1, True),
+    User('uid-5', 'Jigar (admin)', 'pottato@example.com',
+        '', None, {}, None,
+        None, [], descr_user_1, True),
     User('uid-0', None, None,
         '', None, {}, [],
         None, ["protect"], descr_user_0, False)

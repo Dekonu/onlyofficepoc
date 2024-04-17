@@ -30,6 +30,7 @@ from src.configuration import ConfigurationManager
 from src.response import ErrorResponse
 from src.utils import docManager, fileUtils, serviceConverter, users, jwtManager, historyManager, trackManager, builderManager
 import re
+from requests.utils import requote_uri
 
 config_manager = ConfigurationManager()
 
@@ -369,6 +370,8 @@ def edit(request):
 
     hist = historyManager.getHistoryObject(storagePath, filename, docKey, fileUri, isEnableDirectUrl, request)  # get the document history
 
+    print(json.dumps(edConfig))
+
     context = {  # the data that will be passed to the template
         'cfg': json.dumps(edConfig),  # the document config in json format
         'history': json.dumps(hist['history']) if 'history' in hist else None,  # the information about the current version
@@ -389,6 +392,8 @@ def track(request):
     try:
         body = trackManager.readBody(request)  # read request body
         status = body['status']  # and get status from it
+
+        print(body['key'])
 
         if (status == 1): # editing
             if (body['actions'] and body['actions'][0]['type'] == 0):  # finished edit
@@ -445,9 +450,9 @@ def testdocbuilder(request):
     local_files = docManager.getFilesInfo(request)
     uri_dict = {}
     for file in local_files:
-        uri_dict[file["title"]] = docManager.getDownloadUrl(file["title"], request, True).replace(' ','%20')
+        uri_dict[file["title"]] = requote_uri(docManager.getDownloadUrl(file["title"], request, True))
     body_unicode = request.body.decode('utf-8')
-    body_unicode = re.sub(r"{([^{]*?)}", lambda p: uri_dict[p.group(1)], body_unicode)
+    body_unicode = re.sub(r"{{([^{]*?)}}", lambda p: uri_dict[p.group(1)], body_unicode)
 
     builderCode = body_unicode
     req = request
@@ -487,7 +492,6 @@ def testdocbuilder(request):
 # download a file
 def download(request):
     try:
-        print(request.GET['fileName'])
         fileName = fileUtils.getFileName(request.GET['fileName'])  # get the file name
         userAddress = request.GET.get('userAddress')
         isEmbedded = request.GET.get('dmode')
@@ -506,9 +510,6 @@ def download(request):
 
         if (userAddress == None):
             userAddress = request
-
-        print(userAddress)
-        print(fileName)
 
         filePath = docManager.getForcesavePath(fileName, userAddress, False)  # get the path to the forcesaved file version
         if (filePath == ""):
